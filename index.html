@@ -7,13 +7,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Playfair+Display&display=swap" rel="stylesheet">
     <style>
-        /* Фон как старая бумага */
+        /* ==== Основные стили === */
+        * {
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             margin: 0;
             font-family: 'Cormorant Garamond', serif;
-            background-image: url('https://i.imgur.com/YTl7nD9.jpg');
+            background-image: url('https://carder.top/imagens/1746178040376-305495938.jpg');
             background-size: cover;
-            background-repeat: repeat;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             color: #333;
             line-height: 1.6;
             min-height: 100vh;
@@ -33,10 +41,6 @@
             margin: 2rem auto;
             padding: 0 1rem;
             animation: fadeIn 0.5s ease-in-out;
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            padding-bottom: 2rem;
         }
 
         @keyframes fadeIn {
@@ -63,7 +67,7 @@
 
         .hero-form {
             display: none;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             padding: 1.5rem;
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -96,7 +100,7 @@
         }
 
         .hero-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
@@ -112,7 +116,7 @@
             width: 100%;
             height: 250px;
             object-fit: contain;
-            background-color: #f0f0f0;
+            background-color: transparent;
         }
 
         .hero-info {
@@ -144,7 +148,7 @@
 
         .admin-panel {
             display: none;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             padding: 1.5rem;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
@@ -153,7 +157,7 @@
 
         #adminControls {
             display: none;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             padding: 1.5rem;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
@@ -285,6 +289,9 @@
     <div id="adminControls">
         <h2>🔧 Управление героями</h2>
         <ul id="adminHeroesList"></ul>
+
+        <h3>🎵 Музыка на фоне</h3>
+        <p>Для изменения музыки замените файл <strong>music.mp3</strong> на свой в папке сайта.</p>
     </div>
 </div>
 
@@ -311,11 +318,11 @@
         localStorage.setItem('heroes', JSON.stringify(heroes));
     }
 
-    // Инициализация выпадающих списков годов
     window.onload = () => {
         populateYears('birthYear', 1890, 1950);
         populateYears('deathYear', 1939, 2025);
         renderHeroes();
+        initAudio();
     };
 
     function populateYears(id, start, end) {
@@ -335,8 +342,7 @@
 
     function toggleDeathInput() {
         const status = document.getElementById('deathStatus').value;
-        const deathYearGroup = document.getElementById('deathYearGroup');
-        deathYearGroup.style.display = status === 'dead' ? 'block' : 'none';
+        document.getElementById('deathYearGroup').style.display = status === 'dead' ? 'block' : 'none';
     }
 
     function isRussianLettersOnly(str) {
@@ -373,7 +379,6 @@
                 story,
                 photo: e.target.result
             };
-
             heroes.push(hero);
             saveToLocalStorage();
             renderHeroes();
@@ -381,7 +386,6 @@
             document.getElementById('heroForm').reset();
             document.getElementById('deathYearGroup').style.display = 'none';
         };
-
         reader.readAsDataURL(photoInput.files[0]);
     }
 
@@ -403,7 +407,6 @@
                     ${hero.story ? `<p><strong>Подвиг:</strong> ${hero.story}</p>` : ''}
                 </div>
             `;
-
             container.appendChild(card);
         });
     }
@@ -455,7 +458,7 @@
 
     function deleteHero(id) {
         if (confirm('Вы действительно хотите удалить этого героя?')) {
-            heroes = heroes.filter(hero => hero.id !== id);
+            heroes = heroes.filter(h => h.id !== id);
             saveToLocalStorage();
             renderHeroes();
             renderAdminControls();
@@ -494,39 +497,33 @@
 
         const newStory = prompt('История и подвиги:', hero.story || '');
 
-        if (newName && newSurname && newBirthYear) {
-            hero.name = newName;
-            hero.surname = newSurname;
-            hero.birthYear = newBirthYear;
-            hero.deathYear = newDeathYear;
-            hero.story = newStory;
+        hero.name = newName;
+        hero.surname = newSurname;
+        hero.birthYear = newBirthYear;
+        hero.deathYear = newDeathYear;
+        hero.story = newStory;
 
-            saveToLocalStorage();
-            renderHeroes();
-            renderAdminControls();
-        }
+        saveToLocalStorage();
+        renderHeroes();
+        renderAdminControls();
     }
-</script>
 
-<script>
-    const music = document.getElementById("backgroundMusic");
-    const toggle = document.getElementById("musicToggle");
+    // ==== Новая логика музыки ====
+    function initAudio() {
+        const music = document.getElementById("backgroundMusic");
+        const toggle = document.getElementById("musicToggle");
 
-    // Воспроизведение по первому клику (нужно для некоторых браузеров)
-    document.addEventListener("click", () => {
-        if (!music.dataset.played) {
-            music.play();
-            music.dataset.played = true;
-        }
-    }, { once: true });
+        document.addEventListener("click", () => {
+            if (!music.dataset.played) {
+                music.play().catch(() => {});
+                music.dataset.played = true;
+            }
+        }, { once: true });
 
-    toggle.addEventListener("change", function () {
-        if (this.checked) {
-            music.volume = 0.5;
-        } else {
-            music.volume = 0;
-        }
-    });
+        toggle.addEventListener("change", function () {
+            music.volume = this.checked ? 0.5 : 0;
+        });
+    }
 </script>
 
 </body>
