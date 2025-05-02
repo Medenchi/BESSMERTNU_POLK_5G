@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Бессмертный полк нашего кабинета</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Playfair+Display&display=swap" rel="stylesheet">
+    <style>
+        /* Фон как старая бумага */
+        body {
+            margin: 0;
+            font-family: 'Cormorant Garamond', serif;
+            background-image: url('https://i.imgur.com/YTl7nD9.jpg');
+            background-size: cover;
+            background-repeat: repeat;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(45deg, rgba(178, 34, 34, 0.9), rgba(139, 0, 0, 0.8));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            font-family: 'Playfair Display', serif;
+        }
+
+        .container {
+            max-width: 90%;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            animation: fadeIn 0.5s ease-in-out;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            padding-bottom: 2rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        button {
+            background-color: #8b0000;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+            font-family: 'Playfair Display', serif;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #a52a2a;
+        }
+
+        .hero-form {
+            display: none;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-top: 1rem;
+            animation: slideDown 0.4s ease-in-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-form input,
+        .hero-form textarea,
+        .hero-form select {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .heroes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .hero-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .hero-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-image {
+            width: 100%;
+            height: 250px;
+            object-fit: contain;
+            background-color: #f0f0f0;
+        }
+
+        .hero-info {
+            padding: 1rem;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 2rem;
+            opacity: 0.1;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            font-size: 0.1px;
+            color: transparent;
+            user-select: none;
+        }
+
+        .login-link::after {
+            content: ".";
+            color: #8b0000;
+            font-size: 1.5rem;
+            opacity: 0.2;
+            display: block;
+        }
+
+        .login-link:hover::after {
+            opacity: 0.5;
+        }
+
+        .admin-panel {
+            display: none;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 2rem;
+        }
+
+        #adminControls {
+            display: none;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 2rem;
+        }
+
+        #adminControls ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        #adminControls li {
+            margin-bottom: 1rem;
+        }
+
+        /* Переключатель музыки */
+        .music-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #8b0000;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #28a745;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        @media (max-width: 600px) {
+            .hero-image {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Бессмертный полк нашего кабинета</h1>
+</header>
+
+<div class="container">
+    <button onclick="showForm()">Увековечить</button>
+
+    <div id="heroForm" class="hero-form">
+        <h2>Добавить героя</h2>
+        <input type="text" id="name" placeholder="Имя (на русском)" required>
+        <input type="text" id="surname" placeholder="Фамилия (на русском)" required>
+
+        <label for="birthYear">Год рождения:</label>
+        <select id="birthYear" required>
+            <option value="">Выберите год</option>
+        </select>
+
+        <label for="deathStatus">Судьба:</label>
+        <select id="deathStatus" onchange="toggleDeathInput()">
+            <option value="alive">Не указано</option>
+            <option value="unknown">Неизвестно</option>
+            <option value="dead">Умер</option>
+        </select>
+
+        <div id="deathYearGroup" style="display:none;">
+            <label for="deathYear">Год смерти:</label>
+            <select id="deathYear">
+                <option value="">Выберите год</option>
+            </select>
+        </div>
+
+        <textarea id="story" rows="3" placeholder="История и подвиги (необязательно)"></textarea>
+        <input type="file" id="photo" accept="image/*" required>
+        <button onclick="addHero()">Добавить</button>
+    </div>
+
+    <div class="heroes" id="heroesContainer"></div>
+
+    <!-- Кнопка входа -->
+    <div class="login-link" onclick="toggleLogin()"></div>
+
+    <!-- Форма входа -->
+    <div class="admin-panel" id="adminPanel">
+        <h2>🔐 Админ-панель</h2>
+        <p>Введите логин и пароль для открытия панели управления.</p>
+        <input type="text" id="adminLogin" placeholder="Логин">
+        <input type="password" id="adminPass" placeholder="Пароль">
+        <button onclick="checkAuth()">Войти</button>
+    </div>
+
+    <!-- Панель управления героями -->
+    <div id="adminControls">
+        <h2>🔧 Управление героями</h2>
+        <ul id="adminHeroesList"></ul>
+    </div>
+</div>
+
+<!-- Музыка -->
+<audio id="backgroundMusic" loop>
+    <source src="music.mp3" type="audio/mpeg">
+    Ваш браузер не поддерживает аудио.
+</audio>
+
+<!-- Переключатель музыки -->
+<div class="music-toggle">
+    <label class="switch">
+        <input type="checkbox" id="musicToggle" checked>
+        <span class="slider"></span>
+    </label>
+</div>
+
+<script>
+    let heroes = JSON.parse(localStorage.getItem('heroes')) || [];
+    const adminHash = CryptoJS.SHA256("Dev").toString();
+    const passHash = CryptoJS.SHA256("ILoveDev").toString();
+
+    function saveToLocalStorage() {
+        localStorage.setItem('heroes', JSON.stringify(heroes));
+    }
+
+    // Инициализация выпадающих списков годов
+    window.onload = () => {
+        populateYears('birthYear', 1890, 1950);
+        populateYears('deathYear', 1939, 2025);
+        renderHeroes();
+    };
+
+    function populateYears(id, start, end) {
+        const select = document.getElementById(id);
+        for (let year = end; year >= start; year--) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            select.appendChild(option);
+        }
+    }
+
+    function showForm() {
+        const form = document.getElementById('heroForm');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleDeathInput() {
+        const status = document.getElementById('deathStatus').value;
+        const deathYearGroup = document.getElementById('deathYearGroup');
+        deathYearGroup.style.display = status === 'dead' ? 'block' : 'none';
+    }
+
+    function isRussianLettersOnly(str) {
+        return /^[\u0400-\u04FF\s\-]+$/i.test(str);
+    }
+
+    function addHero() {
+        const name = document.getElementById('name').value.trim();
+        const surname = document.getElementById('surname').value.trim();
+        const birthYear = document.getElementById('birthYear').value;
+        const deathStatus = document.getElementById('deathStatus').value;
+        const deathYear = deathStatus === 'dead' ? document.getElementById('deathYear').value : '';
+        const story = document.getElementById('story').value.trim();
+        const photoInput = document.getElementById('photo');
+
+        if (!isRussianLettersOnly(name) || !isRussianLettersOnly(surname)) {
+            alert('Имя и фамилия должны быть на русском языке!');
+            return;
+        }
+
+        if (!name || !surname || !birthYear || !photoInput.files.length) {
+            alert('Имя, фамилия, год рождения и фото обязательны!');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const hero = {
+                id: Date.now(),
+                name,
+                surname,
+                birthYear,
+                deathYear: deathStatus === 'unknown' ? 'Неизвестно' : deathYear,
+                story,
+                photo: e.target.result
+            };
+
+            heroes.push(hero);
+            saveToLocalStorage();
+            renderHeroes();
+            document.getElementById('heroForm').style.display = 'none';
+            document.getElementById('heroForm').reset();
+            document.getElementById('deathYearGroup').style.display = 'none';
+        };
+
+        reader.readAsDataURL(photoInput.files[0]);
+    }
+
+    function renderHeroes() {
+        const container = document.getElementById('heroesContainer');
+        container.innerHTML = '';
+
+        heroes.forEach(hero => {
+            const card = document.createElement('div');
+            card.className = 'hero-card';
+
+            card.innerHTML = `
+                <img src="${hero.photo}" class="hero-image">
+                <div class="hero-info">
+                    <h3>${hero.name} ${hero.surname}</h3>
+                    <p>Родился: ${hero.birthYear}</p>
+                    ${hero.deathYear && hero.deathYear !== 'Неизвестно' ? `<p>Умер: ${hero.deathYear}</p>` : ''}
+                    ${hero.deathYear === 'Неизвестно' ? `<p>Судьба: неизвестна</p>` : ''}
+                    ${hero.story ? `<p><strong>Подвиг:</strong> ${hero.story}</p>` : ''}
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+    }
+
+    function renderAdminControls() {
+        const list = document.getElementById('adminHeroesList');
+        list.innerHTML = '';
+        const controlsDiv = document.getElementById('adminControls');
+
+        if (heroes.length === 0) {
+            controlsDiv.style.display = 'none';
+            return;
+        }
+
+        controlsDiv.style.display = 'block';
+
+        heroes.forEach(hero => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <strong>${hero.name} ${hero.surname}, ${hero.birthYear}</strong>
+                ${hero.deathYear ? ` — ${hero.deathYear}` : ''}
+                <br>
+                <button onclick="editHero(${hero.id})">✎ Редактировать</button>
+                <button onclick="deleteHero(${hero.id})">🗑 Удалить</button>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    function toggleLogin() {
+        const panel = document.getElementById('adminPanel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function checkAuth() {
+        const login = document.getElementById('adminLogin').value.trim();
+        const pass = document.getElementById('adminPass').value.trim();
+
+        const hashLogin = CryptoJS.SHA256(login).toString();
+        const hashPass = CryptoJS.SHA256(pass).toString();
+
+        if (hashLogin === adminHash && hashPass === passHash) {
+            document.getElementById('adminPanel').style.display = 'none';
+            renderAdminControls();
+        } else {
+            alert('Неверные учетные данные!');
+        }
+    }
+
+    function deleteHero(id) {
+        if (confirm('Вы действительно хотите удалить этого героя?')) {
+            heroes = heroes.filter(hero => hero.id !== id);
+            saveToLocalStorage();
+            renderHeroes();
+            renderAdminControls();
+        }
+    }
+
+    function editHero(id) {
+        const hero = heroes.find(h => h.id === id);
+        if (!hero) return;
+
+        const newName = prompt('Введите новое имя:', hero.name);
+        const newSurname = prompt('Введите новую фамилию:', hero.surname);
+
+        if (!isRussianLettersOnly(newName) || !isRussianLettersOnly(newSurname)) {
+            alert('Имя и фамилия должны быть на русском языке!');
+            return;
+        }
+
+        const newBirthYear = prompt(`Год рождения (от 1890 до 1950):`, hero.birthYear);
+        if (newBirthYear < 1890 || newBirthYear > 1950) {
+            alert('Недопустимый год рождения!');
+            return;
+        }
+
+        const hasDied = confirm('Какова судьба героя?\nОК — умер\nОтмена — неизвестно');
+        let newDeathYear = '';
+        if (hasDied) {
+            newDeathYear = prompt(`Год смерти (от 1939 до 2025):`, hero.deathYear || '');
+            if (newDeathYear && (newDeathYear < 1939 || newDeathYear > 2025)) {
+                alert('Недопустимый год смерти!');
+                return;
+            }
+        } else {
+            newDeathYear = 'Неизвестно';
+        }
+
+        const newStory = prompt('История и подвиги:', hero.story || '');
+
+        if (newName && newSurname && newBirthYear) {
+            hero.name = newName;
+            hero.surname = newSurname;
+            hero.birthYear = newBirthYear;
+            hero.deathYear = newDeathYear;
+            hero.story = newStory;
+
+            saveToLocalStorage();
+            renderHeroes();
+            renderAdminControls();
+        }
+    }
+</script>
+
+<script>
+    const music = document.getElementById("backgroundMusic");
+    const toggle = document.getElementById("musicToggle");
+
+    // Воспроизведение по первому клику (нужно для некоторых браузеров)
+    document.addEventListener("click", () => {
+        if (!music.dataset.played) {
+            music.play();
+            music.dataset.played = true;
+        }
+    }, { once: true });
+
+    toggle.addEventListener("change", function () {
+        if (this.checked) {
+            music.volume = 0.5;
+        } else {
+            music.volume = 0;
+        }
+    });
+</script>
+
+</body>
+</html>
